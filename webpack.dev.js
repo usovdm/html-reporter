@@ -12,7 +12,8 @@ module.exports = merge(
         devServer: {
             contentBase: './lib/static',
             inline: true,
-            hot: true
+            hot: true,
+            // index: 'gui.html'
         },
         plugins: [
             new webpack.HotModuleReplacementPlugin()

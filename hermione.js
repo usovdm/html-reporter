@@ -83,7 +83,8 @@ async function prepare(hermione, reportBuilder, pluginConfig) {
         hermione.on(hermione.events.RUNNER_END, (stats) => {
             reportBuilder
                 .setStats(stats)
-                .setApiValues(hermione.htmlReporter.values);
+                .setApiValues(hermione.htmlReporter.values)
+                .getResult();
 
             return Promise.all(promises).then(resolve, reject);
         });
