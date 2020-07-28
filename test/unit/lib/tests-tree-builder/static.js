@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const StaticResultsTreeBuilder = require('lib/tests-tree-builder/static');
 const {SUCCESS} = require('lib/constants/test-statuses');
+const {versions: browserVersions} = require('lib/constants/browser');
 
 describe('StaticResultsTreeBuilder', () => {
     const sandbox = sinon.sandbox.create();
@@ -71,42 +72,44 @@ describe('StaticResultsTreeBuilder', () => {
     afterEach(() => sandbox.restore());
 
     describe('"build" method', () => {
-        it('should add test result for each passed row', () => {
-            const dataFromDb1 = mkDataFromDb_({suitePath: ['s1'], name: 'yabro'});
-            const dataFromDb2 = mkDataFromDb_({suitePath: ['s2'], name: 'yabro'});
-            const rows = [mkDataRowFromDb_(dataFromDb1), mkDataRowFromDb_(dataFromDb2)];
+        describe('should add test result for', () => {
+            it('each passed row', () => {
+                const dataFromDb1 = mkDataFromDb_({suitePath: ['s1'], name: 'yabro'});
+                const dataFromDb2 = mkDataFromDb_({suitePath: ['s2'], name: 'yabro'});
+                const rows = [mkDataRowFromDb_(dataFromDb1), mkDataRowFromDb_(dataFromDb2)];
 
-            builder.build(rows);
+                builder.build(rows);
 
-            assert.calledWith(
-                StaticResultsTreeBuilder.prototype.addTestResult.firstCall,
-                formatToTestResult(dataFromDb1, {attempt: 0}),
-                {browserId: 'yabro', testPath: ['s1'], attempt: 0}
-            );
-            assert.calledWith(
-                StaticResultsTreeBuilder.prototype.addTestResult.secondCall,
-                formatToTestResult(dataFromDb2, {attempt: 0}),
-                {browserId: 'yabro', testPath: ['s2'], attempt: 0}
-            );
-        });
+                assert.calledWith(
+                    StaticResultsTreeBuilder.prototype.addTestResult.firstCall,
+                    formatToTestResult(dataFromDb1, {attempt: 0}),
+                    {browserId: 'yabro', testPath: ['s1'], attempt: 0}
+                );
+                assert.calledWith(
+                    StaticResultsTreeBuilder.prototype.addTestResult.secondCall,
+                    formatToTestResult(dataFromDb2, {attempt: 0}),
+                    {browserId: 'yabro', testPath: ['s2'], attempt: 0}
+                );
+            });
 
-        it('should add result for the same test with increase attempt', () => {
-            const dataFromDb1 = mkDataFromDb_({suitePath: ['s1'], name: 'yabro', timestamp: 10});
-            const dataFromDb2 = mkDataFromDb_({suitePath: ['s1'], name: 'yabro', timestamp: 20});
-            const rows = [mkDataRowFromDb_(dataFromDb1), mkDataRowFromDb_(dataFromDb2)];
+            it('the same test with increase attempt', () => {
+                const dataFromDb1 = mkDataFromDb_({suitePath: ['s1'], name: 'yabro', timestamp: 10});
+                const dataFromDb2 = mkDataFromDb_({suitePath: ['s1'], name: 'yabro', timestamp: 20});
+                const rows = [mkDataRowFromDb_(dataFromDb1), mkDataRowFromDb_(dataFromDb2)];
 
-            builder.build(rows);
+                builder.build(rows);
 
-            assert.calledWith(
-                StaticResultsTreeBuilder.prototype.addTestResult.firstCall,
-                formatToTestResult(dataFromDb1, {attempt: 0}),
-                {browserId: 'yabro', testPath: ['s1'], attempt: 0}
-            );
-            assert.calledWith(
-                StaticResultsTreeBuilder.prototype.addTestResult.secondCall,
-                formatToTestResult(dataFromDb1, {attempt: 1}),
-                {browserId: 'yabro', testPath: ['s1'], attempt: 1}
-            );
+                assert.calledWith(
+                    StaticResultsTreeBuilder.prototype.addTestResult.firstCall,
+                    formatToTestResult(dataFromDb1, {attempt: 0}),
+                    {browserId: 'yabro', testPath: ['s1'], attempt: 0}
+                );
+                assert.calledWith(
+                    StaticResultsTreeBuilder.prototype.addTestResult.secondCall,
+                    formatToTestResult(dataFromDb1, {attempt: 1}),
+                    {browserId: 'yabro', testPath: ['s1'], attempt: 1}
+                );
+            });
         });
 
         it('should sort tree after add test results', () => {
@@ -120,20 +123,57 @@ describe('StaticResultsTreeBuilder', () => {
             );
         });
 
-        it('should convert tree to old format by default', () => {
-            const rows = [mkDataRowFromDb_()];
+        describe('should return tests tree', () => {
+            it('in old format by default', () => {
+                StaticResultsTreeBuilder.prototype.convertToOldFormat.returns('old-format-tree');
 
-            builder.build(rows);
+                const {tree} = builder.build([]);
 
-            assert.calledOnceWith(StaticResultsTreeBuilder.prototype.convertToOldFormat);
+                assert.equal(tree, 'old-format-tree');
+            });
+
+            it('without formatting', () => {
+                sandbox.stub(StaticResultsTreeBuilder.prototype, 'tree').get(() => 'tree');
+
+                const {tree} = builder.build([], {convertToOldFormat: false});
+
+                assert.notCalled(StaticResultsTreeBuilder.prototype.convertToOldFormat);
+                assert.equal(tree, 'tree');
+            });
         });
 
-        it('should not convert tree to old format if passed option with "false" value', () => {
-            const rows = [mkDataRowFromDb_()];
+        describe('should return browsers', () => {
+            it('with unknown version if it is not specified in metaInfo', () => {
+                const dataFromDb = mkDataFromDb_({name: 'yabro', metaInfo: {}});
+                const rows = [mkDataRowFromDb_(dataFromDb)];
 
-            builder.build(rows, {convertToOldFormat: false});
+                const {browsers} = builder.build(rows);
 
-            assert.notCalled(StaticResultsTreeBuilder.prototype.convertToOldFormat);
+                assert.deepEqual(browsers, [{id: 'yabro', versions: [browserVersions.UNKNOWN]}]);
+            });
+
+            it('with few versions for the same browser', () => {
+                const dataFromDb1 = mkDataFromDb_({name: 'yabro', metaInfo: {browserVersion: '1'}});
+                const dataFromDb2 = mkDataFromDb_({name: 'yabro', metaInfo: {browserVersion: '2'}});
+                const rows = [mkDataRowFromDb_(dataFromDb1), mkDataRowFromDb_(dataFromDb2)];
+
+                const {browsers} = builder.build(rows);
+
+                assert.deepEqual(browsers, [{id: 'yabro', versions: ['1', '2']}]);
+            });
+
+            it('with versions for different browsers', () => {
+                const dataFromDb1 = mkDataFromDb_({name: 'yabro1', metaInfo: {browserVersion: '1'}});
+                const dataFromDb2 = mkDataFromDb_({name: 'yabro2', metaInfo: {browserVersion: '2'}});
+                const rows = [mkDataRowFromDb_(dataFromDb1), mkDataRowFromDb_(dataFromDb2)];
+
+                const {browsers} = builder.build(rows);
+
+                assert.deepEqual(browsers, [
+                    {id: 'yabro1', versions: ['1']},
+                    {id: 'yabro2', versions: ['2']}
+                ]);
+            });
         });
     });
 });

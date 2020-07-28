@@ -336,83 +336,28 @@ describe('lib/static/modules/reducers', () => {
             });
 
             it('should build correct tree', () => {
-                const suitesValues = [
-                    [
-                        JSON.stringify(['test', 'smalltest1']),
-                        'smalltest1',
-                        'browser',
-                        'url',
-                        JSON.stringify({muted: false}),
-                        'description',
-                        JSON.stringify({message: 'error message', stack: 'error stack', history: 'some history'}),
-                        'skipReason',
-                        JSON.stringify([{actualImg: {path: 'path', size: {width: 0, height: 0}}}]),
-                        Number(true), // multiple tabs
-                        Number(true), // screenshot
-                        'fail',
-                        0 // timestamp
-                    ],
-                    [
-                        JSON.stringify(['test', 'smalltest1']),
-                        'smalltest1',
-                        'browser',
-                        'url',
-                        JSON.stringify({muted: false, browserVersion: '1.2'}),
-                        'description',
-                        JSON.stringify({message: 'error message', stack: 'error stack', history: 'some history'}),
-                        'skipReason',
-                        JSON.stringify([{actualImg: {path: 'path', size: {width: 0, height: 0}}}]),
-                        Number(true), // multiple tabs
-                        Number(true), // screenshot
-                        'success',
-                        1 // timestamp
-                    ],
-                    [
-                        JSON.stringify(['test', 'smalltest2']),
-                        'smalltest2',
-                        'browser',
-                        'url',
-                        JSON.stringify({muted: false, browserVersion: '1.1'}),
-                        'description',
-                        JSON.stringify({message: 'error message', stack: 'error stack', history: 'some history'}),
-                        'skipReason',
-                        JSON.stringify([{actualImg: {path: 'path', size: {width: 0, height: 0}}}]),
-                        Number(true), // multiple tabs
-                        Number(true), // screenshot
-                        'success',
-                        0 // timestamp
-                    ]
-                ];
+                const suitesFromDb = ['rows-with-suites'];
+                const suitesTree = [{suitePath: ['some-path']}];
+                const testsTreeBuilder = {
+                    build: sinon.stub().withArgs(suitesFromDb).returns(
+                        {tree: {suites: suitesTree}, stats: {}}
+                    )
+                };
                 const db = {
-                    exec: sinon.stub().onFirstCall().returns([{values: suitesValues}])
+                    exec: sinon.stub().onFirstCall().returns([{values: suitesFromDb}])
                 };
                 const action = {
                     type: actionNames.FETCH_DB,
                     payload: {
                         db,
-                        fetchDbDetails: [
-                            {
-                                url: 'stub'
-                            }
-                        ]
+                        fetchDbDetails: [{url: 'stub'}],
+                        testsTreeBuilder
                     }
                 };
 
                 const newState = reducer(defaultState, action);
 
-                assert.match(newState.suites['test'].children[0].name, 'smalltest1');
-                assert.match(newState.suites['test'].children[1].name, 'smalltest2');
-                assert.match(newState.suites['test'].children[0].browsers[0].retries.length, 1);
-                assert.match(newState.suites['test'].children[1].browsers[0].retries.length, 0);
-
-                assert.deepEqual(newState.browsers, [{
-                    id: 'browser',
-                    versions: [
-                        'unknown',
-                        '1.1',
-                        '1.2'
-                    ]
-                }]);
+                assert.deepEqual(newState.suites, suitesTree);
             });
         });
 
