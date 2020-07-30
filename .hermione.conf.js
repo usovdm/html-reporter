@@ -10,7 +10,9 @@ const serverPort = 8080;
 const fixturesPath = 'test/func/fixtures/report';
 
 module.exports = {
-    baseUrl: `http://localhost:${serverPort}/${fixturesPath}/index.html`,
+    // baseUrl: `http://localhost:${serverPort}/${fixturesPath}/index.html`,
+    baseUrl: 'https://github.com',
+    gridUrl: 'http://web4:c0545734536d4a8efa644f6c4d706c34@sg.yandex-team.ru:4444/wd/hub',
 
     screenshotsDir: 'test/func/main/screens',
 
@@ -33,30 +35,30 @@ module.exports = {
     },
 
     plugins: {
-        'html-reporter-test-server': {
-            enabled: true,
-            port: serverPort
-        },
+        // 'html-reporter-test-server': {
+        //     enabled: true,
+        //     port: serverPort
+        // },
         'html-reporter-tester': {
             enabled: true,
             path: 'hermione-report',
             scaleImages: true
         },
-        'hermione-headless-chrome': {
-            browserId: 'chrome',
-            version: '77'
-        },
-        'hermione-global-hook': {
-            beforeEach: function() {
-                return this.browser
-                    .url('')
-                    .execute(() => {
-                        document.querySelectorAll('.section').forEach((section) => {
-                            const title = section.querySelector('.section__title').innerText;
-                            section.setAttribute('title', title);
-                        });
-                    });
-            }
-        }
+        // 'hermione-headless-chrome': {
+        //     browserId: 'chrome',
+        //     version: '77'
+        // },
+        // 'hermione-global-hook': {
+        //     beforeEach: function() {
+        //         return this.browser
+        //             .url('')
+        //             .execute(() => {
+        //                 document.querySelectorAll('.section').forEach((section) => {
+        //                     const title = section.querySelector('.section__title').innerText;
+        //                     section.setAttribute('title', title);
+        //                 });
+        //             });
+        //     }
+        // }
     }
 };

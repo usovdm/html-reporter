@@ -16,7 +16,7 @@
     "start": "webpack-dev-server --config=webpack.dev.js --progress --colors --hot --inline",
     "commitmsg": "conventional-changelog-lint -e",
     "release": "standard-version",
-    "watch": "webpack --progress -d --config=webpack.dev.js --watch"
+    "watch": "webpack --progress --config=webpack.dev.js --watch"
   },
   "repository": {
     "type": "git",
