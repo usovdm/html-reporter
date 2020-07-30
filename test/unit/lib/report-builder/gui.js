@@ -175,12 +175,12 @@ describe('GuiReportBuilder', () => {
     });
 
     describe('"addUpdated" method', () => {
-        it(`should add "${UPDATED}" status to result`, async () => {
+        it(`should add "${SUCCESS}" status to result if all images updated`, async () => {
             const reportBuilder = await mkGuiReportBuilder_();
 
-            reportBuilder.addUpdated(stubTest_());
+            reportBuilder.addUpdated(stubTest_({imagesInfo: [{status: UPDATED}]}));
 
-            assert.equal(getTestResult_().status, UPDATED);
+            assert.equal(getTestResult_().status, SUCCESS);
         });
 
         it('should update test image for current state name', async () => {
@@ -207,6 +207,7 @@ describe('GuiReportBuilder', () => {
 
             assert.match(imagesInfo[0], {stateName: 'plain1', status: UPDATED});
             assert.match(imagesInfo[1], {stateName: 'plain2', status: FAIL});
+            assert.equal(getTestResult_().status, FAIL);
         });
 
         it('should update last test image if state name was not passed', async () => {
