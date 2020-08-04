@@ -1,17 +1,22 @@
 describe('descr', () => {
     it('test1', function() {
         return this.browser
-            .url('')
-            .foo('ss')
-            .assertView('plain-1', '.js-header-wrapper');
-    });
-
-    it('test2', function() {
-        return this.browser
-            .url('')
-            .assertView('plain-1', '.js-header-wrapper');
+            .url('/')
+            // .foo('ss')
+            .then(() => {
+                assert.equal(1, 2);
+            });
+        // .assertView('plain-1', '.js-header-wrapper');
     });
 });
+
+// describe('descr2', () => {
+//     it('test2', function() {
+//         return this.browser
+//             .url('')
+//             .assertView('plain-1', '.js-header-wrapper');
+//     });
+// });
 
 // describe('Test header', function() {
 //     it('should show tests summary', function() {
